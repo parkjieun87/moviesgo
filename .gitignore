@@ -1,0 +1,61 @@
+# ========================
+# 1. 빌드 및 출력 (Gradle/Java)
+# ========================
+/build/      # Gradle output directory
+.gradle/     # Gradle cache directory
+*.class
+*.jar
+*.war
+*.ear
+out/         # Some Java output directories
+
+# Keep Gradle Wrapper files
+!gradle/wrapper/gradle-wrapper.jar
+
+# ========================
+# 2. IDE 및 로컬 설정
+# ========================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# STS / Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# ========================
+# 3. 로그 및 민감 정보
+# ========================
+logs/
+*.log
+tmp/
+*.bak
+
+# 환경 변수 및 로컬 설정 파일 (민감 정보 포함)
+.env
+application.yml
+application.properties
+
+# OS Generated Files
+.DS_Store
+# 프로젝트 제외 경로
+/.gradle/
