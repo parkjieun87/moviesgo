@@ -31,6 +31,7 @@ public class Seats extends BaseEntity {
     private SeatType seatType = SeatType.NOMAL;
 
     @Column(name = "price_adjustment", nullable = false)
+    @Builder.Default
     private Integer priceAdjustment=0;
 
     // 연관관계

@@ -49,7 +49,7 @@ public class Bookings extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screening_id", nullable = false)
-    private Screenings screenings;
+    private Screenings screening;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @Builder.Default
