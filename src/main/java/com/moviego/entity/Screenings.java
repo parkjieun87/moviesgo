@@ -31,6 +31,7 @@ public class Screenings extends BaseEntity{
     private LocalTime endTime;
 
     @Column(name = "base_price", nullable = false)
+    @Builder.Default
     private Integer basePrice=12000;
 
     @Column(name = "total_seats", nullable = false)

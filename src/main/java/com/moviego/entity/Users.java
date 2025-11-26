@@ -3,15 +3,16 @@ package com.moviego.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+// 💡 이 코드를 추가하여 빌더가 모든 인자를 가진 생성자에 접근하도록 허용합니다.
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Builder
 public class Users extends BaseEntity {
 
@@ -40,7 +41,7 @@ public class Users extends BaseEntity {
     private UserRole role = UserRole.USER;
 
     @Column(name = "birth_date", nullable = false)
-    private LocalDate birthDate;
+    private String birthDate;
 
 
     // 연관관계
