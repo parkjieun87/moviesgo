@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -30,14 +32,19 @@ public class JwtUtil {
     /**
      * 1. JWT 토큰을 생성합니다. (로그인 성공 시 호출)
      * @param userId 토큰 Payload에 저장할 사용자 고유 ID
+     * @param email  토큰의 Subject로 사용될 사용자 이메일
      * @return 생성된 JWT 문자열
      */
-    public String generateToken(Long userId) {
+    public String generateToken(Long userId, String email) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+
         return Jwts.builder()
-                .setSubject(userId.toString()) // 토큰의 주체 (Subject)는 사용자 ID
+                .setClaims(claims)
+                .setSubject(email) // 토큰의 주체 (Subject)는 사용자 ID
                 .setIssuedAt(now)              // 토큰 발급 시간
                 .setExpiration(expiryDate)     // 토큰 만료 시간
                 .signWith(key, SignatureAlgorithm.HS256) // 서명 (Key와 알고리즘)
@@ -51,10 +58,7 @@ public class JwtUtil {
      */
     public Long getUserIdFromToken(String token) {
         Claims claims = getClaims(token);
-        if (claims != null && claims.getSubject() != null) {
-            return Long.parseLong(claims.getSubject());
-        }
-        return null;
+        return (claims != null && claims.containsKey("userId")) ? claims.get("userId", Long.class) : null;
     }
 
     /**

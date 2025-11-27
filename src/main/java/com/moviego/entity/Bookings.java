@@ -51,6 +51,10 @@ public class Bookings extends BaseEntity {
     @JoinColumn(name = "screening_id", nullable = false)
     private Screenings screening;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_id", nullable = false)
+    private Seats seat;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @Builder.Default
     private List<BookingSeats> bookingSeats = new ArrayList<>();
