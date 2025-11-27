@@ -1,6 +1,7 @@
 package com.moviego.controller;
 
 import com.moviego.dto.auth.RegisterRequest;
+import com.moviego.dto.auth.RegisterResponse;
 import com.moviego.entity.Users;
 import com.moviego.repository.UserRepository;
 import com.moviego.util.JwtUtil;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,7 +26,7 @@ public class AuthController {
 
     @Transactional
     @PostMapping("/register")
-    public Users registerUser(RegisterRequest request) {
+    public RegisterResponse registerUser(@RequestBody RegisterRequest request) {
         // 1. 이메일 중복 확인
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
@@ -43,7 +45,13 @@ public class AuthController {
                 .status(Users.Status.ACTIVE)
                 .build();
 
-        return userRepository.save(newUser);
+        Users savedUser = userRepository.save(newUser);
+
+        return new RegisterResponse(
+                savedUser.getUserId(),
+                savedUser.getEmail(),
+                "회원가입이 성공적으로 완료되었습니다."
+        );
     }
 
 
