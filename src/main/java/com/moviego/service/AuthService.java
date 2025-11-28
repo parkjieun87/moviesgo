@@ -8,9 +8,12 @@ import com.moviego.entity.Users;
 import com.moviego.repository.UserRepository;
 import com.moviego.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
 
     //회원가입 메서드
     @Transactional
@@ -76,6 +81,23 @@ public class AuthService {
 
     public boolean validateToken(String token) {
         return jwtUtil.validateToken(token);
+    }
+
+    //로그아웃 메서드
+    @Transactional
+    public void logout(String accessToken) {
+        // 1. JwtUtil을 사용하여 토큰의 만료 시간을 알아냅니다.
+        long expirationTimeMs = jwtUtil.getExpirationTime(accessToken); // 이 메서드가 JwtUtil에 있어야 함
+        long remainingTimeMs = expirationTimeMs - System.currentTimeMillis();
+
+        if (remainingTimeMs > 0) {
+            // 2. Redis에 토큰을 저장하고, 남은 유효기간 동안만 TTL을 설정합니다.
+            redisTemplate.opsForValue().set(
+                    BLACKLIST_PREFIX + accessToken,
+                    "revoked",
+                    Duration.ofMillis(remainingTimeMs)
+            );
+        }
     }
 
 }

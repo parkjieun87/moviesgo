@@ -97,4 +97,18 @@ public class JwtUtil {
             return null;
         }
     }
+
+    /**
+     * 4. JWT 토큰에서 만료 시간(Expiration Time)을 추출합니다. (로그아웃 시 호출)
+     * @param token JWT 문자열
+     * @return 만료 시간 (Unix Time in milliseconds, long 타입)
+     */
+    public long getExpirationTime(String token) {
+        Claims claims = getClaims(token);
+        if (claims != null && claims.getExpiration() != null) {
+            return claims.getExpiration().getTime();
+        }
+        // 토큰 파싱 오류 등으로 만료 시간을 얻을 수 없으면 0을 반환하거나 예외를 던질 수 있습니다.
+        return 0L;
+    }
 }
