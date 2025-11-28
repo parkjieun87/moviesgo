@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
+    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
+    private final RedisTemplate<String, Object> redisTemplate;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -40,6 +44,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7); // "Bearer " 제거
+
+        // --- 추가된 블랙리스트 검사 로직 ---
+        if (redisTemplate.hasKey(BLACKLIST_PREFIX + token)) {
+            logger.warn("블랙리스트에 포함된 Access Token입니다. 접근 거부.");
+
+            // 401 Unauthorized 응답 설정 및 요청 처리 중단
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Access Token is revoked and is not valid anymore.");
+            return;
+        }
 
         // 2. JWT 유효성 검사
         if (!jwtUtil.validateToken(token)) {

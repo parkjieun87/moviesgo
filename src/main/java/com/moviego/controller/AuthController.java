@@ -1,11 +1,9 @@
 package com.moviego.controller;
 
-import com.moviego.dto.auth.JoinRequest;
-import com.moviego.dto.auth.JoinResponse;
-import com.moviego.dto.auth.RegisterRequest;
-import com.moviego.dto.auth.RegisterResponse;
+import com.moviego.dto.auth.*;
 import com.moviego.service.AuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,6 +49,32 @@ public class AuthController {
         }catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new JoinResponse(null,null,null, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(HttpServletRequest request) {
+
+        String header = request.getHeader("Authorization");
+
+        // 1. 헤더 유효성 검사 (Bearer 토큰 형식 확인)
+        if (header == null || !header.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AuthResponse(null, "인증 토큰(Bearer)이 필요합니다."));
+        }
+
+        try {
+            String accessToken = header.substring(7);
+
+            // 2. 서비스 계층에 로그아웃 로직 위임 (블랙리스트 등록)
+            authService.logout(accessToken);
+
+            // 3. 성공 응답
+            return ResponseEntity.ok(new AuthResponse(null, "성공적으로 로그아웃되었습니다."));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(null, "로그아웃 처리 중 오류 발생: " + e.getMessage()));
         }
     }
 
