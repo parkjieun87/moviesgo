@@ -2,6 +2,7 @@ package com.moviego.controller;
 
 import com.moviego.dto.auth.*;
 import com.moviego.service.AuthService;
+import com.moviego.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> registerUser(@Valid @RequestBody RegisterRequest request) {
@@ -78,4 +80,21 @@ public class AuthController {
         }
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteUser(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody WithdrawalRequest request
+    ) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
+
+        String token = authHeader.substring(7);
+        Long userId = jwtUtil.getUserIdFromToken(token);
+
+        authService.deleteUser(userId, request.getPassword(), token);
+
+        return ResponseEntity.noContent().build();
+    }
 }

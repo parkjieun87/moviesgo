@@ -8,7 +8,7 @@ import com.moviego.entity.Users;
 import com.moviego.repository.UserRepository;
 import com.moviego.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
     private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
 
     //회원가입 메서드
@@ -100,4 +100,38 @@ public class AuthService {
         }
     }
 
+    //회원탈퇴 메서드
+    @Transactional
+    public void deleteUser(Long userId, String inputPassword, String accessToken) {
+
+        // 1. 사용자 조회
+        Users user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 2️.비밀번호 검증
+        if (!passwordEncoder.matches(inputPassword, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 이미 탈퇴된 사용자 체크
+        if (user.getStatus() == Users.Status.DELETED) {
+            throw new IllegalArgumentException("이미 탈퇴한 사용자입니다.");
+        }
+
+        // 4. 계정 상태 변경 (Soft Delete)
+        user.setStatus(Users.Status.DELETED);
+        user.setEmail(user.getEmail() + "_deleted_" + System.currentTimeMillis());
+
+        // 5. JWT 블랙리스트 등록 (로그아웃 방식과 동일)
+        long expirationTimeMs = jwtUtil.getExpirationTime(accessToken);
+        long remainingTimeMs = expirationTimeMs - System.currentTimeMillis();
+
+        if (remainingTimeMs > 0) {
+            redisTemplate.opsForValue().set(
+                    BLACKLIST_PREFIX + accessToken,
+                    "deleted", // 로그아웃 시 "revoked" 대신 "deleted" 표시
+                    Duration.ofMillis(remainingTimeMs)
+            );
+        }
+    }
 }
