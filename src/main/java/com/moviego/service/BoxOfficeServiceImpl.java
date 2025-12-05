@@ -2,7 +2,6 @@ package com.moviego.service;
 
 import com.moviego.dto.movie.BoxOfficeMovie;
 import com.moviego.dto.movie.BoxOfficeResponse;
-import com.moviego.dto.movie.MovieInfoResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,9 @@
 package com.moviego.mapper;
 
 import com.moviego.dto.movie.MovieInfo;
+import com.moviego.dto.movie.TmdbResult;
 import com.moviego.entity.Movies;
+import com.moviego.service.TmdbService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -15,57 +17,65 @@ public class MovieMapper {
 
     /**
      * 신규 영화 정보 저장 시 DTO를 Entity로 변환합니다. (INSERT 시 사용)
-     * @param dto MovieInfo DTO
-     * @return Movies Entity (새로운 객체)
+     * 시그니처 변경: TmdbResult와 TmdbService 인수를 받도록 수정
      */
-    public Movies toNewEntity(MovieInfo dto) {
+    public Movies toNewEntity(MovieInfo dto, Optional<TmdbResult> tmdbDataOpt, TmdbService tmdbService) {
         if (dto == null) {
             return null;
         }
 
-        // Movies.builder()를 사용하여 새로운 엔티티를 생성합니다.
-        // 이 엔티티는 아직 DB에 저장되지 않았습니다.
-        return Movies.builder()
-                // 1. KOFIC 고유 코드 매핑 (Unique Index 컬럼)
-                .koficMovieCd(dto.getMovieCd())
+        // TMDB 데이터 추출 및 URL 변환
+        String description = tmdbDataOpt.map(TmdbResult::getOverview).orElse(null);
+        String posterUrl = tmdbDataOpt.map(TmdbResult::getPosterPath)
+                .map(tmdbService::getFullPosterUrl)
+                .orElse(null);
 
-                // 2. 나머지 필드 매핑 및 가공
+        return Movies.builder()
+                .koficMovieCd(dto.getMovieCd())
                 .title(dto.getMovieNm())
-                .description("")
+                .description(description)
                 .duration(parseDuration(dto.getShowTm()))
                 .releaseDate(parseLocalDate(dto.getOpenDt()))
                 .rating(parseRating(dto))
                 .isShowing(isShowing(dto.getPrdtStatNm()))
-
-                // 연관관계 필드는 별도 로직으로 처리합니다.
+                .posterUrl(posterUrl)
                 .build();
     }
 
     /**
      * 이미 존재하는 영화의 상세 정보가 변경되었을 때, 기존 Entity를 업데이트합니다. (UPDATE 시 사용)
-     * @param dto 새로운 정보를 담은 MovieInfo DTO
-     * @param existingEntity DB에서 조회된 기존 Movies Entity
+     * 시그니처 변경: TmdbResult와 TmdbService 인수를 받도록 수정
      */
-    public void updateEntity(MovieInfo dto, Movies existingEntity) {
+    public void updateEntity(MovieInfo dto, Movies existingEntity, Optional<TmdbResult> tmdbDataOpt, TmdbService tmdbService) {
         if (dto == null || existingEntity == null) {
             return;
         }
 
+        // TMDB 데이터 추출 및 URL 변환
+        String description = tmdbDataOpt.map(TmdbResult::getOverview).orElse(null);
+        String posterUrl = tmdbDataOpt.map(TmdbResult::getPosterPath)
+                .map(tmdbService::getFullPosterUrl)
+                .orElse(null);
+
+
         // 기존 엔티티의 PK(movieId)와 Unique Key(koficMovieCd)는 유지됩니다.
 
-        // 변경될 수 있는 필드만 setter를 사용하여 업데이트합니다.
+        // KOFIC 필드 업데이트
         existingEntity.setTitle(dto.getMovieNm());
-        existingEntity.setDescription("");
         existingEntity.setDuration(parseDuration(dto.getShowTm()));
         existingEntity.setReleaseDate(parseLocalDate(dto.getOpenDt()));
         existingEntity.setRating(parseRating(dto));
         existingEntity.setShowing(isShowing(dto.getPrdtStatNm()));
 
-        // 포스터 URL, 장르 등 연관관계 필드 업데이트 로직이 있다면 여기에 추가해야 합니다.
-        // 현재는 DTO에 없는 필드는 그대로 유지됩니다.
-    }
+        // TMDB 필드 업데이트: null이 아닌 경우에만 갱신
+        if (description != null) {
+            existingEntity.setDescription(description);
+        }
+        if (posterUrl != null) {
+            existingEntity.setPosterUrl(posterUrl);
+        }
 
-    // --- 데이터 가공 보조 메서드 (변경 없음) ---
+    }
 
     private Integer parseDuration(String showTm) {
         try {
