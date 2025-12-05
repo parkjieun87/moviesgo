@@ -1,6 +1,7 @@
 package com.moviego.service;
 
 import com.moviego.dto.movie.BoxOfficeMovie;
+import com.moviego.dto.movie.MovieInfo;
 
 import java.util.List;
 
