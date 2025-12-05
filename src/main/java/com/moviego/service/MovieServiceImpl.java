@@ -45,8 +45,6 @@ public class MovieServiceImpl implements MovieService {
         for (BoxOfficeMovie dailyMovie : dailyBoxOfficeList) {
             String movieCd = dailyMovie.getMovieCd();
 
-            // BoxOfficeServiceImpl 캐스팅은 BoxOfficeService 인터페이스에 getMovieInfo가 없을 때의 임시 방편입니다.
-            // (실제 프로젝트에서는 인터페이스에 선언해야 합니다.)
             MovieInfoResponse response = getMovieInfo(movieCd);
 
             if (response != null && response.getMovieInfoResult() != null) {
