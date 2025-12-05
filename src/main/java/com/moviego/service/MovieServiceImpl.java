@@ -7,15 +7,23 @@ import com.moviego.entity.Movies;
 import com.moviego.mapper.MovieMapper;
 import com.moviego.repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class MoviServiceImpl implements MovieService {
+public class MovieServiceImpl implements MovieService {
+
+    private final RestTemplate restTemplate = new  RestTemplate();
+    // 영화 상세목록을 가져오는 API URL
+    private static final String MOVIE_INFO_API_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/movie/searchMovieInfo.json";
+    @Value("${kofic.api.key}")
+    private String apiKey;
 
     private final BoxOfficeService boxOfficeService;
     private final MovieMapper movieMapper;
@@ -39,7 +47,7 @@ public class MoviServiceImpl implements MovieService {
 
             // BoxOfficeServiceImpl 캐스팅은 BoxOfficeService 인터페이스에 getMovieInfo가 없을 때의 임시 방편입니다.
             // (실제 프로젝트에서는 인터페이스에 선언해야 합니다.)
-            MovieInfoResponse response = ((BoxOfficeServiceImpl) boxOfficeService).getMovieInfo(movieCd);
+            MovieInfoResponse response = getMovieInfo(movieCd);
 
             if (response != null && response.getMovieInfoResult() != null) {
                 MovieInfo movieInfo = response.getMovieInfoResult().getMovieInfo();
@@ -89,6 +97,20 @@ public class MoviServiceImpl implements MovieService {
             // 다른 DB 오류 (예: 필드 길이 초과)가 발생할 수 있습니다.
             System.err.println("❌ 영화 상세 정보 DB 저장 중 오류 발생 (MovieCd: " + koficMovieCd + "): " + e.getMessage());
             // 트랜잭션이 롤백됩니다.
+        }
+    }
+
+    /**
+     * KOFIC API에서 특정 영화 코드(movieCd)의 상세 정보를 조회합니다.
+     */
+    public MovieInfoResponse getMovieInfo(String movieCd) {
+        String url = MOVIE_INFO_API_URL + "?key=" + apiKey + "&movieCd=" + movieCd;
+
+        try {
+            return restTemplate.getForObject(url, MovieInfoResponse.class);
+        } catch (Exception e) {
+            System.err.println("영화 상세 정보 API 호출 중 오류 발생 (movieCd: " + movieCd + "): " + e.getMessage());
+            return null;
         }
     }
 }

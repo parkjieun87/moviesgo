@@ -16,7 +16,6 @@ public class MovieInfo {
     private String prdtStatNm;  // 제작 상태 (ex. 개봉)
     private String nationNm;    // 제작 국가
     private List<Genre> genres; // 장르 목록
-    private List<Director> directors; // 감독 목록
     private List<Audit> audits; // 관람 등급 목록
 
     // 내부 클래스: 장르 정보
@@ -25,11 +24,6 @@ public class MovieInfo {
         private String genreNm; // 장르명
     }
 
-    // 내부 클래스: 감독 정보
-    @Data
-    public static class Director {
-        private String peopleNm; // 감독명
-    }
 
     // 추가된 내부 클래스: 관람 등급 정보
     @Data

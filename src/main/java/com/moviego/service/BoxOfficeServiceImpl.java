@@ -17,8 +17,6 @@ public class BoxOfficeServiceImpl implements BoxOfficeService {
     private final RestTemplate restTemplate = new  RestTemplate();
     // 일별 박스오피스 목록을 가져오는 API URL
     private static final String BOX_OFFICE_API_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
-    // 영화 상세목록을 가져오는 API URL
-    private static final String MOVIE_INFO_API_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/movie/searchMovieInfo.json";
     @Value("${kofic.api.key}")
     private String apiKey;
 
@@ -51,20 +49,6 @@ public class BoxOfficeServiceImpl implements BoxOfficeService {
         } catch (Exception e) {
             System.err.println("일별 박스오피스 API 호출 중 오류 발생: " + e.getMessage());
             return List.of();
-        }
-    }
-
-    /**
-     * KOFIC API에서 특정 영화 코드(movieCd)의 상세 정보를 조회합니다.
-     */
-    public MovieInfoResponse getMovieInfo(String movieCd) {
-        String url = MOVIE_INFO_API_URL + "?key=" + apiKey + "&movieCd=" + movieCd;
-
-        try {
-            return restTemplate.getForObject(url, MovieInfoResponse.class);
-        } catch (Exception e) {
-            System.err.println("영화 상세 정보 API 호출 중 오류 발생 (movieCd: " + movieCd + "): " + e.getMessage());
-            return null;
         }
     }
 
