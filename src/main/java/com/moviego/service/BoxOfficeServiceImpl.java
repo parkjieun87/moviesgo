@@ -16,7 +16,6 @@ public class BoxOfficeServiceImpl implements BoxOfficeService {
     private final RestTemplate restTemplate = new  RestTemplate();
     // 일별 박스오피스 목록을 가져오는 API URL
     private static final String BOX_OFFICE_API_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
-
     @Value("${kofic.api.key}")
     private String apiKey;
 
@@ -51,4 +50,5 @@ public class BoxOfficeServiceImpl implements BoxOfficeService {
             return List.of();
         }
     }
+
 }

@@ -20,6 +20,9 @@ public class Movies extends BaseEntity {
     @Column(name = "movie_id")
     private Long movieId;
 
+    @Column(name = "kofic_movie_cd", nullable = false, length = 10, unique = true) // 🌟 Unique Key 설정
+    private String koficMovieCd;
+
     @Column(nullable = false, length = 200)
     private String title;
 
