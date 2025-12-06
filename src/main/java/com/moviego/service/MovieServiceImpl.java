@@ -4,8 +4,12 @@ import com.moviego.dto.movie.BoxOfficeMovie;
 import com.moviego.dto.movie.MovieInfo;
 import com.moviego.dto.movie.MovieInfoResponse;
 import com.moviego.dto.movie.TmdbResult;
+import com.moviego.entity.Genres;
+import com.moviego.entity.MovieGenre;
 import com.moviego.entity.Movies;
 import com.moviego.mapper.MovieMapper;
+import com.moviego.repository.GenreRepository;
+import com.moviego.repository.MovieGenreRepository;
 import com.moviego.repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +27,8 @@ public class MovieServiceImpl implements MovieService {
 
     private final RestTemplate restTemplate = new  RestTemplate();
     private static final String MOVIE_INFO_API_URL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/movie/searchMovieInfo.json";
+    private final MovieGenreRepository movieGenreRepository;
+    private final GenreRepository genreRepository;
     @Value("${kofic.api.key}")
     private String apiKey;
 
@@ -78,25 +85,35 @@ public class MovieServiceImpl implements MovieService {
         // 1. KOFIC MovieCd로 기존 엔티티 조회
         Optional<Movies> existingMovieOpt = movieRepository.findByKoficMovieCd(koficMovieCd);
 
+        // 1단계 해결: movieToProcess 변수를 선언하고 null로 초기화합니다.
+        Movies movieToProcess = null;
+
         try {
             if (existingMovieOpt.isPresent()) {
                 // 2. 존재하는 경우: 기존 엔티티를 업데이트
-                Movies existingMovie = existingMovieOpt.get();
+                movieToProcess = existingMovieOpt.get(); //movieToProcess에 할당 (업데이트 대상)
 
                 // Mapper에 TMDB 데이터와 TmdbService를 함께 전달하여 업데이트
-                movieMapper.updateEntity(movieInfo, existingMovie, tmdbDataOpt, tmdbService);
+                movieMapper.updateEntity(movieInfo, movieToProcess, tmdbDataOpt, tmdbService);
 
-                movieRepository.save(existingMovie);
+                movieRepository.save(movieToProcess);
 
-                System.out.println("🔄 영화 상세 정보 업데이트 완료: " + existingMovie.getTitle() + " (" + koficMovieCd + ")");
+                System.out.println("🔄 영화 상세 정보 업데이트 완료: " + movieToProcess.getTitle() + " (" + koficMovieCd + ")");
             } else {
                 // 3. 존재하지 않는 경우: 새로운 엔티티 생성 후 삽입
                 // Mapper에 TMDB 데이터와 TmdbService를 함께 전달하여 새로운 엔티티 생성
-                Movies newMovie = movieMapper.toNewEntity(movieInfo, tmdbDataOpt, tmdbService);
+                movieToProcess = movieMapper.toNewEntity(movieInfo, tmdbDataOpt, tmdbService); //movieToProcess에 할당 (신규 객체)
 
-                movieRepository.save(newMovie); // INSERT 쿼리 실행
+                movieRepository.save(movieToProcess); // INSERT 쿼리 실행
 
-                System.out.println("✅ 신규 영화 상세 정보 저장 완료: " + newMovie.getTitle() + " (" + koficMovieCd + ")");
+                System.out.println("✅ 신규 영화 상세 정보 저장 완료: " + movieToProcess.getTitle() + " (" + koficMovieCd + ")");
+            }
+
+            // 4단계: 장르 처리 로직을 if/else 블록 외부에서 호출합니다.
+            // 이 시점에서 movieToProcess는 DB에 저장되어 ID를 가지거나, null이어야 합니다.
+            if (movieToProcess.getMovieId() != null) {
+                // DB에 저장된 ID와 KOFIC MovieInfo DTO를 전달합니다.
+                processAndLinkGenres(movieToProcess.getMovieId(), movieInfo);
             }
 
         } catch (Exception e) {
@@ -116,5 +133,41 @@ public class MovieServiceImpl implements MovieService {
             System.err.println("영화 상세 정보 API 호출 중 오류 발생 (movieCd: " + movieCd + "): " + e.getMessage());
             return null;
         }
+    }
+
+    private void processAndLinkGenres(Long movieId, MovieInfo movieInfo) {
+
+        // 1. 장르 이름 리스트 확보
+        List<String> localGenreNames = movieInfo.getKoficGenreNames();
+
+        if (localGenreNames.isEmpty()) {
+            movieGenreRepository.deleteByMovieId(movieId); // 관계만 삭제하고 종료
+            return;
+        }
+
+        // 2. 기존 관계 초기화 (DELETE)
+        movieGenreRepository.deleteByMovieId(movieId);
+
+        // Movie 엔티티 참조 (MovieGenre 생성을 위한 외래키 설정)
+        Movies movieReference = movieRepository.getReferenceById(movieId);
+        List<MovieGenre> newRelations = new ArrayList<>();
+
+        for (String genreName : localGenreNames) {
+
+            // 3-1. 장르 Upsert: 이름으로 찾거나 새로 저장하여 ID 확보
+            Genres genre = genreRepository.findByGenreName(genreName)
+                    .orElseGet(() -> genreRepository.save(
+                            Genres.builder().genreName(genreName).build()
+                    ));
+
+            // 3-2. 새로운 관계 엔티티 생성
+            newRelations.add(MovieGenre.builder()
+                    .movie(movieReference)
+                    .genre(genre)
+                    .build());
+        }
+
+        // 3-3. 새로운 관계 일괄 저장 (INSERT)
+        movieGenreRepository.saveAll(newRelations);
     }
 }

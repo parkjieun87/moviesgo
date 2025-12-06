@@ -2,7 +2,9 @@ package com.moviego.dto.movie;
 
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class MovieInfo {
@@ -32,5 +34,15 @@ public class MovieInfo {
         private String auditNo;
         // 관람 등급명 (예: 12세 이상 관람가, 전체 관람가)
         private String watchGradeNm;
+    }
+
+    public List<String> getKoficGenreNames() {
+        if (this.genres == null) {
+            return Collections.emptyList();
+        }
+        // Genre 내부 클래스 리스트에서 genreNm 필드만 추출
+        return this.genres.stream()
+                .map(Genre::getGenreNm) // KOFIC의 한글 장르 이름을 바로 사용
+                .collect(Collectors.toList());
     }
 }

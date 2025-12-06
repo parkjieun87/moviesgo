@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/kofic")
 @RequiredArgsConstructor
-@Tag(name = "KOFIC 영화 API", description = "영화진흥위원회 API 데이터 조회 및 관리")
+@Tag(name = "KOFIC 영화 API", description = "영화진흥위원회 API 일별 박스오피스 조회")
 public class BoxofficeController {
 
     private final BoxOfficeService boxOfficeService;
