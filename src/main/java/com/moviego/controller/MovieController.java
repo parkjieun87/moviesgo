@@ -1,19 +1,21 @@
 package com.moviego.controller;
 
 import com.moviego.service.MovieService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/api/movie")
 @RequiredArgsConstructor
+@Tag(name = "KOFIC 영화 API", description = "영화진흥위원회 API 일별 박스오피스 조회")
 public class MovieController {
     
     private final MovieService movieService;
 
-    @PostMapping("/daily-boxoffice")
+    @PostMapping("/daily-movie")
     public ResponseEntity<String> saveDaliyBoxOffice(@RequestParam("targetDt") String targetDt) {
         if (targetDt == null || targetDt.length() != 8) {
             return ResponseEntity.badRequest().body("targetDt 파라미터는 YYYYMMDD 형식의 8자리여야 합니다.");
