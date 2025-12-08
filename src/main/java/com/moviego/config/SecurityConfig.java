@@ -39,7 +39,7 @@ public class SecurityConfig {
                         // ★★★ 기타 인증이 필요 없는 필수 경로 허용
                         .requestMatchers(
                                 "/api/kofic/**",
-                                "/api/movies/**",
+                                "/api/movie/**",
                                 "/api-docs",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
