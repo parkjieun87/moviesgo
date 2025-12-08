@@ -1,8 +1,7 @@
 package com.moviego.service;
 
-import com.moviego.dto.movie.MovieInfo;
-import com.moviego.dto.movie.MovieInfoResponse;
-import com.moviego.dto.movie.TmdbResult;
+import com.moviego.dto.movie.*;
+import org.springframework.data.domain.Page;
 
 import java.util.Optional;
 
@@ -15,4 +14,8 @@ public interface MovieService {
 
     // KOFIC 상세 정보를 조회하는 메서드 (변경 없음)
     MovieInfoResponse getMovieInfo(String movieCd);
+
+    Page<MovieListResponse> getMovieList(int page, int size);
+
+    MovieDetailResponse getMovieDetail(Long movieId);
 }

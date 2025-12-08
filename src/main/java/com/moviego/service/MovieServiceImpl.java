@@ -1,9 +1,6 @@
 package com.moviego.service;
 
-import com.moviego.dto.movie.BoxOfficeMovie;
-import com.moviego.dto.movie.MovieInfo;
-import com.moviego.dto.movie.MovieInfoResponse;
-import com.moviego.dto.movie.TmdbResult;
+import com.moviego.dto.movie.*;
 import com.moviego.entity.Genres;
 import com.moviego.entity.MovieGenre;
 import com.moviego.entity.Movies;
@@ -11,8 +8,12 @@ import com.moviego.mapper.MovieMapper;
 import com.moviego.repository.GenreRepository;
 import com.moviego.repository.MovieGenreRepository;
 import com.moviego.repository.MovieRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -169,5 +170,45 @@ public class MovieServiceImpl implements MovieService {
 
         // 3-3. 새로운 관계 일괄 저장 (INSERT)
         movieGenreRepository.saveAll(newRelations);
+    }
+
+    /**
+     * 페이지네이션을 적용하여 영화 목록을 조회합니다.
+     * * @param page 조회할 페이지 번호 (0부터 시작)
+     * @param size 페이지당 항목 수
+     * @return 페이지 정보를 담은 영화 목록 (Page<Movie>)
+     */
+    public Page<MovieListResponse> getMovieList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 1. DB에서 엔티티 Page를 가져옵니다.
+        Page<Movies> moviePage = movieRepository.findAll(pageable);
+
+        // 2. 엔티티 Page를 DTO Page로 변환합니다. (순환 참조 방지)
+        // DTO의 생성자를 사용하여 Movies 엔티티에서 필요한 데이터만 추출
+        return moviePage.map(MovieListResponse::new
+        );
+    }
+
+    @Override
+    public MovieDetailResponse getMovieDetail(Long movieId) {
+
+        // 1. 로컬 DB 조회 (Movies 엔티티)
+        Movies movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new EntityNotFoundException("Movie not found with id: " + movieId));
+
+        // MovieGenre 연결 테이블을 거쳐 Genres 테이블의 장르 이름을 추출합니다.
+        List<String> genreNames = movie.getMovieGenres().stream()
+                .map(movieGenre -> movieGenre.getGenre().getGenreName()) // String을 추출
+                .toList();
+        // ----------------------------------------
+
+        // 2. Kofic Movie Code 확보 및 API 호출 (기존 로직 유지)
+        String koficCd = movie.getKoficMovieCd();
+        MovieInfoResponse koficResponse = getMovieInfo(koficCd);
+        MovieInfo movieInfoFromApi = koficResponse.getMovieInfoResult().getMovieInfo();
+
+        // 3. DTO 변환 및 반환
+        return new MovieDetailResponse(movie, genreNames, movieInfoFromApi);
     }
 }
