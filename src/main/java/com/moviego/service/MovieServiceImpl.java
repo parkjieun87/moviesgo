@@ -18,9 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -137,39 +136,53 @@ public class MovieServiceImpl implements MovieService {
     }
 
     private void processAndLinkGenres(Long movieId, MovieInfo movieInfo) {
+        List<String> newGenreNames = movieInfo.getKoficGenreNames();
 
-        // 1. 장르 이름 리스트 확보
-        List<String> localGenreNames = movieInfo.getKoficGenreNames();
+        // 1. 현재 DB 상태 조회
+        List<MovieGenre> existing = movieGenreRepository.findByMovieId(movieId);
+        Set<String> existingNames = existing.stream()
+                .map(mg -> mg.getGenre().getGenreName())
+                .collect(Collectors.toSet());
 
-        if (localGenreNames.isEmpty()) {
-            movieGenreRepository.deleteByMovieId(movieId); // 관계만 삭제하고 종료
+        Set<String> newNames = new HashSet<>(newGenreNames);
+
+        // 2. 변경 없으면 종료
+        if (existingNames.equals(newNames)) {
             return;
         }
 
-        // 2. 기존 관계 초기화 (DELETE)
-        movieGenreRepository.deleteByMovieId(movieId);
+        // 3. 삭제 대상 (DB에만 있음)
+        List<MovieGenre> toDelete = existing.stream()
+                .filter(mg -> !newNames.contains(mg.getGenre().getGenreName()))
+                .toList();
 
-        // Movie 엔티티 참조 (MovieGenre 생성을 위한 외래키 설정)
-        Movies movieReference = movieRepository.getReferenceById(movieId);
-        List<MovieGenre> newRelations = new ArrayList<>();
+        // 4. 추가 대상 (새 목록에만 있음)
+        List<String> toAdd = newGenreNames.stream()
+                .filter(name -> !existingNames.contains(name))
+                .toList();
 
-        for (String genreName : localGenreNames) {
-
-            // 3-1. 장르 Upsert: 이름으로 찾거나 새로 저장하여 ID 확보
-            Genres genre = genreRepository.findByGenreName(genreName)
-                    .orElseGet(() -> genreRepository.save(
-                            Genres.builder().genreName(genreName).build()
-                    ));
-
-            // 3-2. 새로운 관계 엔티티 생성
-            newRelations.add(MovieGenre.builder()
-                    .movie(movieReference)
-                    .genre(genre)
-                    .build());
+        // 5. 삭제
+        if (!toDelete.isEmpty()) {
+            movieGenreRepository.deleteAll(toDelete);
         }
 
-        // 3-3. 새로운 관계 일괄 저장 (INSERT)
-        movieGenreRepository.saveAll(newRelations);
+        // 6. 추가
+        if (!toAdd.isEmpty()) {
+            Movies movieRef = movieRepository.getReferenceById(movieId);
+            List<MovieGenre> newRelations = toAdd.stream()
+                    .map(name -> {
+                        Genres genre = genreRepository.findByGenreName(name)
+                                .orElseGet(() -> genreRepository.save(
+                                        Genres.builder().genreName(name).build()
+                                ));
+                        return MovieGenre.builder()
+                                .movie(movieRef)
+                                .genre(genre)
+                                .build();
+                    })
+                    .toList();
+            movieGenreRepository.saveAll(newRelations);
+        }
     }
 
     /**
