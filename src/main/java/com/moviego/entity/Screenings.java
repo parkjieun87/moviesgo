@@ -3,9 +3,9 @@ package com.moviego.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -22,7 +22,7 @@ public class Screenings extends BaseEntity{
     private Long screeningId;
 
     @Column(name = "screening_date", nullable = false)
-    private Date screeningDate;
+    private LocalDate screeningDate;
 
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
