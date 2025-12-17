@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/api/kofic/**",
                                 "/api/movie/**",
                                 "/api/screening/**",
+                                "/api/bookings/**",
                                 "/api-docs",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
