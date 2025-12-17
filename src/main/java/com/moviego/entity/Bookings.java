@@ -3,9 +3,7 @@ package com.moviego.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +36,6 @@ public class Bookings extends BaseEntity {
     @Column(name = "booked_at", nullable=false, updatable=false)
     private LocalDateTime bookedAt;
 
-    @LastModifiedDate
     @Column(name = "cancelledAt")
     private LocalDateTime cancelledAt;
 

@@ -35,21 +35,21 @@ public class ScreeningController {
 
     // 2. 특정 극장의 상영 시간표 및 좌석 조회 API (GET /api/screening/seats?movieId=1&theaterId=1)
     @GetMapping("/seats")
-    public ResponseEntity<List<ScreeningResponse>> getShowtimesByTheater(
+    public ResponseEntity<List<ScreeningResponse>> getSeatsByTheater(
             @RequestParam("movieId") Long movieId,
             @RequestParam("theaterId") Long theaterId,
             @RequestParam("date") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate date) {
 
         // 1. Service 메서드 호출
-        List<ScreeningResponse> showtimes = screeningService.getShowtimesByTheater(movieId, theaterId, date);
+        List<ScreeningResponse> showtime = screeningService.getShowtimesByTheater(movieId, theaterId, date);
 
         // 2. 결과 반환 (결과가 없을 경우 빈 리스트 반환)
-        if (showtimes.isEmpty()) {
+        if (showtime.isEmpty()) {
             // 상영 일정이 없더라도 404 대신 빈 리스트(200 OK)를 반환하여 클라이언트 처리를 용이하게 함
-            return ResponseEntity.ok(showtimes);
+            return ResponseEntity.ok(showtime);
         }
 
-        return ResponseEntity.ok(showtimes);
+        return ResponseEntity.ok(showtime);
     }
 
 }
