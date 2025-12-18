@@ -18,5 +18,10 @@ public interface BookingRepository extends JpaRepository<Bookings, Long> {
             "AND b.bookingStatus != 'CANCELLED'")
     boolean isSeatAlreadyReserved(@Param("screeningId") Long screeningId,
                                   @Param("seatIds") List<Long> seatIds);
+
+    @Query("SELECT b.seat.seatId FROM Bookings b " +
+            "WHERE b.screening.screeningId = :screeningId " +
+            "AND b.bookingStatus = 'CONFIRMED'")
+    List<Long> findReservedSeatIds(@Param("screeningId") Long screeningId);
 }
 

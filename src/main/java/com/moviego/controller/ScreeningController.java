@@ -33,8 +33,8 @@ public class ScreeningController {
     }
 
 
-    // 2. 특정 극장의 상영 시간표 및 좌석 조회 API (GET /api/screening/seats?movieId=1&theaterId=1)
-    @GetMapping("/seats")
+    // 2. 특정 극장의 상영 시간표 조회 API (GET /api/screening/seats?movieId=1&theaterId=1)
+    @GetMapping("/times")
     public ResponseEntity<List<ScreeningResponse>> getSeatsByTheater(
             @RequestParam("movieId") Long movieId,
             @RequestParam("theaterId") Long theaterId,

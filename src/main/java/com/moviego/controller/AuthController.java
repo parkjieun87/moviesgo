@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> registerUser(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> registerUser(@Valid @ParameterObject RegisterRequest request) {
         try {
             RegisterResponse response = authService.registerUser(request); // 서비스 계층 호출
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -33,7 +34,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<JoinResponse> LoginUser(
-            @Valid @RequestBody JoinRequest joinRequest,
+            @Valid @ParameterObject JoinRequest joinRequest,
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ){
         try {
@@ -83,7 +84,7 @@ public class AuthController {
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteUser(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody WithdrawalRequest request
+            @ParameterObject WithdrawalRequest request
     ) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

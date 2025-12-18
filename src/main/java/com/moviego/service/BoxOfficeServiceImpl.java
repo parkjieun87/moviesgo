@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-@Service // <--- 여기에 @Service 어노테이션이 있어야 합니다.
+@Service
 @RequiredArgsConstructor
 public class BoxOfficeServiceImpl implements BoxOfficeService {
 

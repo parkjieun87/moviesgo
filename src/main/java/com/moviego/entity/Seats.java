@@ -28,7 +28,7 @@ public class Seats extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "seat_type",length = 7)
     @Builder.Default
-    private SeatType seatType = SeatType.NOMAL;
+    private SeatType seatType = SeatType.NORMAL;
 
     @Column(name = "price_adjustment", nullable = false)
     @Builder.Default
@@ -49,7 +49,7 @@ public class Seats extends BaseEntity {
 
     // 비즈니스 메서드
     public enum SeatType {
-        NOMAL,
+        NORMAL,
         VIP
     }
 }
