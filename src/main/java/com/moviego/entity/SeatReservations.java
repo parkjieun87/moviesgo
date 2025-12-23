@@ -3,7 +3,6 @@ package com.moviego.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "seat_reservations", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_screening_seat", columnNames = {"screening_id", "seat_id"})
+})
 public class SeatReservations extends BaseEntity{
 
     @Id
@@ -24,7 +26,6 @@ public class SeatReservations extends BaseEntity{
     @Column(name = "reserved_at", nullable=false, updatable=false)
     private LocalDateTime reservedAt;
 
-    @LastModifiedDate
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
