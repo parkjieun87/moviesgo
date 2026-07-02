@@ -1,6 +1,7 @@
 package com.moviego.controller;
 
 import com.moviego.dto.auth.*;
+import com.moviego.repository.UserRepository;
 import com.moviego.service.AuthService;
 import com.moviego.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
